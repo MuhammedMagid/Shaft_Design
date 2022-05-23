@@ -1,0 +1,186 @@
+import math
+P = float (input("Power to be transmitted (KW)= "))
+PI=3.14159265
+s = float(input("Allowable shear stress (MPa)= "))
+N = float (input("speed in rpm= "))
+print("type of load\n")
+print("1-steady loads\n")
+print("2-minor shock loads\n")
+print("3-heavy shock loads\n")
+load = int(input())
+if(load==1):
+  Cm=1.5
+  Ct=1.0
+elif(load==2):
+  Cm=1.75
+  Ct=1.25
+else:
+  Cm=2.5
+  Ct=2.25
+
+Lt = float(input("total length of shaft(mm)= "))
+n = int (input("total number of pulleys= "))
+
+m = int(input("total number of gears= "))
+T=(9.55e+06*P)/N
+
+#Pulley Information
+radius = []
+power= []
+ang = []
+kl = []
+lpl= []
+t= []
+t1= []
+t2= []
+RHp= []
+RVp= []
+for  i in range(int(n)):
+  print("pulley number ",i+1)
+  print("----------------")
+  rad = float(input("radius of pully(mm)= "))
+  radius.append(rad)
+  pow = float(input("power given by pulley(KW)= " ))
+  power.append(pow)
+  angle = float(input("angle made by pulley with horizontal= "))
+  ang.append((PI/180)*angle)
+  k = float(input("tension ratio of pulley= "))
+  kl.append(k)
+  lp = float(input("point of application of load(mm)= "))
+  lpl.append(lp)
+  print(power[i])
+  print(ang[i])
+  tV=(9.55e+06*power[i])/N 
+  t.append(tV)
+  t1V=(t[i]/radius[i]/(kl[i]-1))
+  t1.append(t1V)
+  t2V=((t[i]/radius[i])+t1[i])
+  t2.append(t2V)
+  print(t[i], t1[i], t2[i])
+  RHpV=(t1[i]+t2[i])*math.cos(ang[i])
+  RHp.append(RHpV)
+  RVpV=(t1[i]+t2[i])*math.sin(ang[i])
+  RVp.append(RVpV)
+
+#Gear Information
+PressureAng=[]
+GearRad =[]
+GearPow = []
+LG = []
+GearTor = []
+TangForce =[]
+RadForce =[]
+RHg =[]
+RVg =[]
+for  j in range(m):
+  print("gear number ",j+1)
+  print("----------------")
+  GR = float(input("radius of gear(mm)= "))
+  GearRad.append(GR)
+  GP = float(input("power given to gear(KW)= " ))
+  GearPow.append(GP)
+  Pa =float(input("pressure angle of gear= "))
+  pa=(PI/180)*Pa
+  PressureAng.append(pa)
+  GL = float(input("point of application of load(mm)= "))
+  LG.append(GL)
+  T_V=(9.55e+06*GearPow[i])/N 
+  GearTor.append(T_V)
+  ft=(t[j]/GearRad[j])
+  TangForce.append(ft)
+  fr=TangForce[j]*math.tan(pa)
+  RadForce.append(fr)
+  RHg.append(RadForce[j])
+  RVg.append(TangForce[j])
+
+#reaction forces at bearing
+RH1=float(0)
+RH2=float(0)
+RV1=float(0)
+RV2=float(0)
+
+for a in range(n):
+  RH1=RH1+((RHp[a]*(Lt-lpl[a]))/Lt)
+  RH2=RH2+((RHp[a]*lpl[a])/Lt)
+  RV1=RV1+((RVp[a]*(Lt-lpl[a]))/Lt)
+  RV2=RV2+((RVp[a]*lpl[a])/Lt)
+
+for b in range(m):
+  RH1=RH1+((RHg[b]*(Lt-LG[b]))/Lt)
+  RH2=RH2+((RHg[b]*LG[b])/Lt)
+  RV1=RV1+((RVg[b]*(Lt-LG[b]))/Lt)
+  RV2=RV2+((RVg[b]*LG[b])/Lt)
+
+print("The reaction forces of left bearing RH1= ",RH1 ," and RV1= " ,RV1)
+print("The reaction forces of right bearing RH2= ",RH2 ," and RV2= ",RV2)
+MV=[]
+MV=[]
+MH=[]
+MH=[]
+
+if lpl[0] > LG[0] :
+  MH.append(RH1*LG[0])
+  MV.append(RV1*LG[0])
+else:
+  MH.append(RH1*lpl[0])
+  MV.append(RV1*lpl[0])
+if(lpl[0]>LG[0]):
+  MH.append(RH1*LG[0])
+  MV.append(RV1*LG[0])
+else:
+  MH.append(RH1*lpl[0])
+  MV.append(RV1*lpl[0])
+if ((Lt-lpl[n-1])>(Lt-LG[m-1])):
+  MH[m+n-1]=RH2*(Lt-LG[m-1])
+  MV[m+n-1]=RV2*(Lt-LG[m-1])
+else:
+  MH[m+n-1]=RH2*(Lt-lpl[n-1])
+  MV[m+n-1]=RV2*(Lt-lpl[n-1])
+q=m+n;
+for x in range(q-1):
+  if(lpl[i]>LG[i]):
+    MH[x+1]=MH[x]-((RHg[x]-RH1)*(lpl[x]-LG[x]))
+    MV[x+1]=MV[x]-((RVg[x]-RV1)*(lpl[i]-LG[x]))
+  else:
+    MH[x+1]=MH[x]-((RHp[x]-RH1)*(LG[x]-lpl[x]))
+    MV[x+1]=MV[x]-((RVp[x]-RV1)*(LG[x]-lpl[x]))
+Mt=[]
+for z in range(q):
+  Mt.append(math.pow(((math.pow(MH[z],2))+(math.pow(MV[z],2))),0.5))
+Mtmax= Mt[1]
+for c in range (3,m+n):
+  if(Mtmax<Mt[i]):
+    Mtmax=Mt[i]
+  else:
+    Mtmax=Mtmax;
+print("maximum bending moment MTmax= ",Mtmax ," N-mm ")
+Meq=math.pow((math.pow((Cm*Mtmax),2)+math.pow((Ct*T),2)),.5)
+H=((16*Meq)/(3.14159265*s))
+d=math.pow(H,0.33)
+
+#find standard size of the shaft
+if (d<25):
+  d=int((((d-0.5)/2)+1)*2)
+
+elif (d<60):
+  d=int((((d-0.5)/5)+1)*5)
+
+elif (d<120):
+  d = int((((d-0.5)/10)+1)*10)
+
+else:
+  d = int((((d-0.5)/20)+1)*120)
+
+print("the standard diameter of shaft d= ",d)
+
+#Torque diagram (for one pully and one gear) to check the algorithm
+import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
+plt.style.use ('ggplot')
+plt.ylabel('Torque')
+plt.xlabel('Distance')
+a = (lpl[0],lpl[0],LG[0],LG[0])
+b = (0,t[0],t[0],t[0]-GearTor[0])
+plt.plot(a,b)
+plt.plot(a,b,marker='o',markersize=7)
+
